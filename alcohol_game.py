@@ -57,12 +57,15 @@ class alcohol_game:
     def start(self):
         # 순서 1. 인트로 2. 시작 여부 3. 이름 받기 4. 게임 종료
         self.intro()
-        
-        yes_or_no = input("게임을 시작할까요?(y/n): ").strip().lower()
-        if yes_or_no not in ('y, n'):
-            return print("y/n 중 골라주세요 ㅡㅡ : ")
-        if yes_or_no == 'n':
-            return print("게임이 시작되지 못했습니다 ㅠ")
+        while True:
+            yes_or_no = input("게임을 시작할까요?(y/n): ").strip().lower()
+            if yes_or_no not in ('y', 'n'):
+                print("y/n 중 골라주세요 ㅡㅡ : ")
+                continue
+            if yes_or_no == 'n':
+                print("게임이 시작되지 못했습니다 ㅠ")
+                return
+            break
         
         self.name = input("오늘 거하게 취해볼 당신의 이름은? : ").strip()
         self.game_list.append(self.name)
