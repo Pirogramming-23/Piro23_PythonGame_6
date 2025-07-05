@@ -87,20 +87,30 @@ class alcohol_game:
     def play(self):
         print(f"{self.player_name}님의 주량은 ({self.alcohol_limit}잔) 입니다.")
         while True:
-            self.apartment_game()
             
-            keep_going = input("다음 게임 할래요?(y/n): ")
+            # 게임 리스트
+            for i, game_name in enumerate(self.game_list.keys(), start=1):
+                print(f"{i}. {game_name}")
+            
+            select = input("게임을 골라주세요: ").strip()
+            
+            try:
+                game_keys = list(self.game_list.keys())
+                selected_game = game_keys[int(select)-1]
+                print(f"\n{selected_game} 게임을 시작!\n")
+                self.game_list[selected_game]()
+            except(ValueError, IndexError):
+                print("숫자를 입력해주세요 잘못 입력했습니다.")
+                continue
+            
+            for i in self.participants:
+                if i['drunk'] >= i['limit']:
+                    print(f"\n{i['name']}님이 치사량을 넘겼습니다")
+                    return
+            
+            keep_going = input("다음 게임 계속 하실까요?(y/n): ").strip().lower()
             if keep_going != 'y':
-                print("게임 끝!")
-                break
-            loser = [i for i in self.participants if i['drunk'] >= p['limit'] ]
-            if loser:
-                print(f"{loser[0]['name']}님이 쓰러졌습니다! knock down")
-                print(
-                    ""
-                    ""
-                    ""
-                    )
+                print("\n게임 종료!")
                 break
         
     # 게임 리스트 함수
