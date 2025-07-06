@@ -57,7 +57,7 @@ class alcohol_game:
     
     # 참여자 추가
     def invite_participants(self):
-        participants = ["은서","하연","연서","예진"]
+        participants = ["은서","하연","연서","예진", "헌도"]
         
         while True:
             try:
@@ -75,43 +75,87 @@ class alcohol_game:
             self.add_participant(part, limit_drink)
 
         print("\n 현재 상태: ")
-        for p in self.participants:
-            remain_limit = p['limit'] - p['drunk']
-            print(f" - {p['name']}: 마신 {p['drunk']}잔, 남은 {remain_limit}잔")
+        for i in self.participants:
+            remain_limit = i['limit'] - i['drunk']
+            print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
 
         print("\n참가자 리스트:")
         print(", ".join(self.player_names), "\n")
-        
         
     # 게임이 돌아가는 로직 구현
     def play(self):
         print(f"{self.player_name}님의 주량은 ({self.alcohol_limit}잔) 입니다.")
         while True:
-            
             # 게임 리스트
-            for i, game_name in enumerate(self.game_list.keys(), start=1):
-                print()
-            
+            print("\n------------게임을 골라주세요------------")
+            for idx, game_name in enumerate(self.game_list.keys(), start=1):
+                print(f"{idx}. {game_name}")
+            print("------------게임을 골라주세요------------")
+
             select = input("게임을 골라주세요: ").strip()
-            
             try:
-                game_keys = list(self.game_list.keys())
-                selected_game = game_keys[int(select)-1]
-                print(f"\n{selected_game} 게임을 시작!\n")
-                self.game_list[selected_game]()
-            except(ValueError, IndexError):
-                print("숫자를 입력해주세요 잘못 입력했습니다.")
+                choice = int(select) - 1
+                selected_game = list(self.game_list.keys())[choice]
+            except (ValueError, IndexError):
+                print("숫자를 입력해주세요. 잘못 입력했습니다.")
+                continue
+
+            print(f"\n[{selected_game}] 게임을 시작!\n")
+            loser = self.game_list[selected_game]()
+
+            # 예외처리: 아무도 안지면 다시
+            if not loser:
                 continue
             
-            for i in self.participants:
-                if i['drunk'] >= i['limit']:
-                    print(f"\n{i['name']}님이 치사량을 넘겼습니다")
+            # 진 사람 색출
+            participant = None
+            for p in self.participants:
+                if p['name'] == loser:
+                    participant = p
+                    break
+            if not participant:
+                continue
+
+            if participant['drunk'] >= participant['limit']:
+                print(f"\n{loser}님이 치사량을 넘겼습니다")
+                print(fr"""
+                    {loser}님 술찌시네요~~ 후후
+                    ￣￣￣￣￣ヽ___ノ￣￣￣￣￣￣￣￣￣
+                            Ｏ
+                             o
+                            ,. ─冖'⌒'─､⌒ ⌒ 〉
+                           ノ       ＼  ⌒ ─､─､〉〉
+                           / ,r‐へへく⌒'￢､  ヽ〉
+                          {{ノ へ._、 ,,／~`  〉 ｝
+                         ／プ￣￣`y'¨Y´￣￣ヽ─}}j=く
+                        ノ /レ'>ー{{___ｭ`ーー'  ﾘ,ｲ}}
+                       / _勺 ｲ;；∵r===､､∴'∵;  シ 
+                      ,/ └'ノ ＼  ご`    ノ{{ー—､__
+                      人＿_/ー┬ー个-､＿＿,,.. ‐´ 〃`ァーｧー＼
+                    . /  |／ |::::|､      〃 /:::/   ヽ
+                    /    |  |::::|＼､_________／ /:::/〃    |
+                """)
+                return 
+            # 컴퓨터가 질 시에 램덤으로 게임 고름
+            if loser != self.player_name:
+                print(f"\n{loser}이(가) 좋아하는 랜덤 게임!\n")
+                time.sleep(1)
+                next_game = random.choice(list(self.game_list.keys()))
+                print(f"{loser}: [{next_game}] 게임!\n")
+                time.sleep(1)
+                self.game_list[next_game]()
+                continue
+            # 내가 질 시에 게임 고름
+            while True:
+                yn = input("다음 게임 계속 하실까요?(y/n): ").strip().lower()
+                if yn == 'y':
+                    break
+                if yn == 'n':
+                    print("\n게임 종료!")
                     return
+                print("잘못 입력하셨어요~ 'y'나 'n'만 눌러주세요")
+
             
-            keep_going = input("다음 게임 계속 하실까요?(y/n): ").strip().lower()
-            if keep_going != 'y':
-                print("\n게임 종료!")
-                break
         
     # 게임 리스트 함수
     def show_game_list(self):
@@ -160,8 +204,12 @@ class alcohol_game:
             if i['name'] == loser:
                 i['drunk'] += 1
                 print(f"\n {loser}님이 {floor}층에서 탈락!!!")
-                print(f"현재 마신 잔: {i['drunk']}잔 (주량 대비 {i['limit'] - i['drunk']}잔 남음)\n")
-                break
+                
+                print("\n 현재 상태: ")
+                for i in self.participants:
+                    remain_limit = i['limit'] - i['drunk']
+                    print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                return loser
         
     # ###############################
     
@@ -195,5 +243,8 @@ class alcohol_game:
 
             
 if __name__ == "__main__":
-    game = alcohol_game()
-    game.start()
+    try:
+        game = alcohol_game()
+        game.start()
+    except Exception as e:
+        print("오류 발생: ", e)
