@@ -1,5 +1,6 @@
 import random
 import time
+import numpy as np ### 요거 추가했어!
 
 class alcohol_game:
     def __init__(self):
@@ -9,6 +10,7 @@ class alcohol_game:
         self.game_list = ["딸기게임", "369게임"]
         self.player_names = []
         self.participants = []
+        self.rng = np.random.default_rng() ### 요거 추가했어 !!!
     
     # 인트로 함수 너무 빨리 출력된다고 생각들면 추후 sleep 시간 조정가능
     def intro(self):
@@ -116,11 +118,21 @@ class alcohol_game:
 
     # 369 게임 함수
     def game_369(self):
-        print("369 게임을 시작합니다! 3, 6, 9가 들어간 숫자는 '짝'을 외쳐주세요!")
-        print("---369! 369! 369! 369!---")
+        print("🚨 369 게임을 시작합니다!🚨")
+        print("📢 규칙: 3, 6, 9가 들어간 숫자는 짝👏을 외쳐주세요!")
+        print("""
+           　 ∧＿＿∧ ＿∧                                
+          (（( ・ω・)三ω・)) 369 369~                      
+          　　(_っっ= _っっ゜　369 369~                    
+          　　 ヽ　　ノ                                 
+          　　　( /￣∪                             
+        """)
 
         current_num = 1
-        turn = 0
+        #플레이러 랜덤 지정
+        turn = self.rng.integers(0, len(self.participants))
+
+        mistake_count = 0
 
         while True:
             player = self.participants[turn % len(self.participants)]
@@ -134,9 +146,19 @@ class alcohol_game:
             
             #self.player_name일 때는 직접 정답 입력하고 그 외에는 랜덤으로 생성
             if name == self.player_name:
-                answer = input(f"{name}의 차례: ").strip()
+                answer = input(f">> {name}의 차례: ").strip()
             else:
-                is_correct = random.random() < 0.8
+                drunk = player['drunk'] # 지금까지 마신 잔 수
+                limit = player['limit'] # 참가자의 전체 주량
+                # 얼마나 취했는지를 비율로 표현
+                if limit > 0:
+                    drunk_ratio = drunk / limit
+                else:
+                    drunk_ratio = 0
+                base_accuracy = 0.9 # 기본 90%의 정답률 
+                adjusted_accuracy = base_accuracy - (drunk_ratio * 0.5) #취한 정도에 따라 정확도 깎음
+                is_correct = random.random() < max(0.3, adjusted_accuracy) #아무리 취해도 30% 확률로는 맞출 수 있게 함
+
                 if is_correct:
                     answer = expected
                 else:
@@ -144,15 +166,29 @@ class alcohol_game:
                         answer = str(current_num)
                     else:
                         answer = "짝"
-                print(f"{name}의 차례: {answer}")
+                print(f">> {name}의 차례: {answer}")
 
             if answer != expected:
-                player['drunk'] += 1
-                remain = player['limit'] - player['drunk']
+                mistake_count += 1
 
-                print(f"{name} 틀렸습니다! ➤ 한 잔 마십니다!\n")
-                break
-            
+                if mistake_count == 1:
+                    print(f"❌ {name} 틀렸습니다! 😅 살리고~ 살리고~ 한 번은 봐줄게요!")
+                    print("")
+                else: 
+                    player['drunk'] += 1
+                    print(f"❌ {name} 땡! 정답은 '{expected}'")
+                    print("""
+    ┏┯┯┯┯┯┓
+    ┃││∧∧│┃살려줘!!
+    ┃│(≧Д≦)┃
+    ┃││ф ф│┃
+    ┗┷┷┷┷┷┛
+                           """)
+                    print(f"🚨 전체 두 번째 실수 발생! 더 이상 못 살려~ 게임 종료! 🚨")
+                    break
+            else:
+                print(f"✅ {name} 정답!\n")
+
             current_num += 1
             turn += 1
 
