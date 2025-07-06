@@ -4,19 +4,21 @@ import numpy as np ### 요거 추가했어!
 import pandas as pd
 import re
 
-
 class alcohol_game:
     def __init__(self):
         # 플레이어 이름
         self.player_name = ""
         self.alcohol_limit = 0
+
+    
+    # 인트로 함수 너무 빨리 출력된다고 생각들면 추후 sleep 시간 조정가능
+
         self.game_list = {"아파트":self.apartment_game, "끝말잇기":self.play_end_word_game, "369게임":self.game_369}
         self.player_names = []
         self.participants = []
         self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
         self.rng = np.random.default_rng() ### 요거 추가했어 !!!
-        
-        
+
     def intro(self):
         intro = r"""
             .　∧∧　■
@@ -43,7 +45,7 @@ class alcohol_game:
         select = [2, 4, 6, 8, 10]
         alcohol_menu = (
             "-------------🍺소주 얼만큼 드세요(수줍)---{\\__/}------\n"
-            "-------------1. 반병 (2잔)🍻--------------(̷ ̷´̷ ̷^̷ ̷`̷)̷◞♡---\n"
+            "-------------1. 반병 (2잔)🍻-------------(̷ ̷´̷ ̷^̷ ̷`̷)̷◞♡---\n"
             "-------------2. 반병에서 한병 (4잔)🍹------|  ⫘ |------\n"
             "-------------3. 한병에서 한병반 (6잔)🍸------------------\n"
             "-------------4. 한병반에서 두병 (8잔)🍷------------------\n"
@@ -82,7 +84,6 @@ class alcohol_game:
 
         print("\n 현재 상태: ")
 
-
         for i in self.participants:
             remain_limit = i['limit'] - i['drunk']
             print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
@@ -110,6 +111,7 @@ class alcohol_game:
 
             print(f"\n[{selected_game}] 게임을 시작!\n")
             loser = self.game_list[selected_game]()
+
             # 예외처리: 아무도 안지면 다시
             if not loser:
                 continue
@@ -143,7 +145,7 @@ class alcohol_game:
                     /    |  |::::|＼､_________／ /:::/〃    |
                 """)
                 return 
-            
+
             # 컴퓨터가 질 시에 램덤으로 게임 고름
             if loser != self.player_name:
                 print(f"\n{loser}이(가) 좋아하는 랜덤 게임!\n")
@@ -151,6 +153,7 @@ class alcohol_game:
                 next_game = random.choice(list(self.game_list.keys()))
                 print(f"{loser}: [{next_game}] 게임!\n")
                 time.sleep(1)
+
                 
                 nested_loser = self.game_list[next_game]()
                 if nested_loser:
@@ -198,15 +201,13 @@ class alcohol_game:
             for i, game in enumerate(self.game_list, start=1):
                 print(f"{i}. {game}\n")
 
-
-
-
-
     # 주량이 0이 될시 딕셔너리에 있는 사람들 out 그리고 게임 종료
     
     
     # 여기서부터 게임 파트###############################
+
     # ################# 아파트 게임
+
     def apartment_game(self):
         print("\n 아파트~~!, 아파트~~!, 아파트~~!, uh, uh-huh, uh-huh [...대충 부르노 마스 보컬]")
         
@@ -246,6 +247,10 @@ class alcohol_game:
                     remain_limit = i['limit'] - i['drunk']
                     print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
                 return loser
+
+    # ###############################
+    
+    
 
     # ################### 끝말잇기
     def is_clean_korean(self, word):
@@ -460,6 +465,7 @@ class alcohol_game:
             current_num += 1
             turn += 1
     # ############################
+
     # 게임을 시작하는 함수
     def start(self):
         # 순서 1. 인트로 2. 시작 여부 3. 이름 받기 4. 게임 종료
@@ -473,7 +479,6 @@ class alcohol_game:
                 print("게임이 시작되지 못했습니다 ㅠ")
                 return
             break
-
         self.player_name = input("오늘 거하게 취해볼 당신의 이름은? : ").strip()
         # self.participants.append(self.player_name)
         self.select_alcohol_limit()
