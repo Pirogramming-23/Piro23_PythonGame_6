@@ -10,7 +10,7 @@ class alcohol_game:
         self.game_list = ["딸기게임", "369게임", "끝말잇기"]
         self.player_names = []
         self.participants = []
-        self.word_list = self.extract_nouns_from_csv("/content/kr_korean.csv")
+        self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
 
     def intro(self):
         intro = r"""
@@ -41,9 +41,9 @@ class alcohol_game:
             return []
 
     def get_computer_word(self, last_char, used_words):
-        for word in self.word_list:
-            if word.startswith(last_char) and word not in used_words:
-                return word
+        candidates = [word for word in self.word_list if word.startswith(last_char) and word not in used_words]
+        if candidates:
+            return random.choice(candidates)  # 랜덤하게 선택
         return None
 
     def play_end_word_game(self):
