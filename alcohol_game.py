@@ -3,6 +3,7 @@ import time
 import numpy as np ### 요거 추가했어!
 import pandas as pd
 import re
+import os
 
 class alcohol_game:
     def __init__(self):
@@ -16,7 +17,9 @@ class alcohol_game:
         self.game_list = {"아파트":self.apartment_game, "끝말잇기":self.play_end_word_game, "369게임":self.game_369, "노선게임":self.subway_game}
         self.player_names = []
         self.participants = []
-        self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, "kr_korean.csv")
+        self.word_list = self.extract_nouns_from_csv(csv_path)
         self.rng = np.random.default_rng() ### 요거 추가했어 !!!
 
     def intro(self):
