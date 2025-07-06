@@ -10,7 +10,7 @@ class alcohol_game:
         self.game_list = ["딸기게임", "369게임", "끝말잇기"]
         self.player_names = []
         self.participants = []
-        self.word_list = self.extract_nouns_from_csv("/content/kr_korean.csv")
+        self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
 
     def intro(self):
         intro = r"""
