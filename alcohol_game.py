@@ -1,17 +1,22 @@
 import random
 import time
+import numpy as np ### 요거 추가했어!
+
 import pandas as pd
 import re
+
 
 class alcohol_game:
     def __init__(self):
         # 플레이어 이름
         self.player_name = ""
         self.alcohol_limit = 0
-        self.game_list = {"아파트":self.apartment_game, "끝말잇기":self.play_end_word_game}
+        self.game_list = {"아파트":self.apartment_game, "끝말잇기":self.play_end_word_game, "369게임":self.game_369}
         self.player_names = []
         self.participants = []
         self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
+        self.rng = np.random.default_rng() ### 요거 추가했어 !!!
+        
         
     def intro(self):
         intro = r"""
@@ -28,7 +33,6 @@ class alcohol_game:
             print(line)
             time.sleep(0.3)
 
-    
             
     # 참여자 추가
     def add_participant(self, name, limit):
@@ -40,7 +44,7 @@ class alcohol_game:
         select = [2, 4, 6, 8, 10]
         alcohol_menu = (
             "-------------🍺소주 얼만큼 드세요(수줍)---{\\__/}------\n"
-            "-------------1. 반병 (2잔)🍻---------------(̷ ̷´̷ ̷^̷ ̷`̷)̷◞♡---\n"
+            "-------------1. 반병 (2잔)🍻--------------(̷ ̷´̷ ̷^̷ ̷`̷)̷◞♡---\n"
             "-------------2. 반병에서 한병 (4잔)🍹------|  ⫘ |------\n"
             "-------------3. 한병에서 한병반 (6잔)🍸------------------\n"
             "-------------4. 한병반에서 두병 (8잔)🍷------------------\n"
@@ -78,6 +82,7 @@ class alcohol_game:
             self.add_participant(part, limit_drink)
 
         print("\n 현재 상태: ")
+
 
         for i in self.participants:
             remain_limit = i['limit'] - i['drunk']
@@ -193,6 +198,84 @@ class alcohol_game:
         else:
             for i, game in enumerate(self.game_list, start=1):
                 print(f"{i}. {game}\n")
+
+
+    # 369 게임 함수
+    def game_369(self):
+        print("🚨 369 게임을 시작합니다!🚨")
+        print("📢 규칙: 3, 6, 9가 들어간 숫자는 짝👏을 외쳐주세요!")
+        print("""
+           　 ∧＿＿∧ ＿∧                                
+          (（( ・ω・)三ω・)) 369 369~                      
+          　　(_っっ= _っっ゜　369 369~                    
+          　　 ヽ　　ノ                                 
+          　　　( /￣∪                             
+        """)
+
+        current_num = 1
+        #플레이러 랜덤 지정
+        turn = self.rng.integers(0, len(self.participants))
+
+        mistake_count = 0
+
+        while True:
+            player = self.participants[turn % len(self.participants)]
+            name = player['name']
+
+            count_369 = sum(1 for d in str(current_num) if d in "369")
+            if count_369 == 0:
+                expected = str(current_num)
+            else:
+                expected = "짝" * count_369
+            
+            #self.player_name일 때는 직접 정답 입력하고 그 외에는 랜덤으로 생성
+            if name == self.player_name:
+                answer = input(f">> {name}의 차례: ").strip()
+            else:
+                drunk = player['drunk'] # 지금까지 마신 잔 수
+                limit = player['limit'] # 참가자의 전체 주량
+                # 얼마나 취했는지를 비율로 표현
+                if limit > 0:
+                    drunk_ratio = drunk / limit
+                else:
+                    drunk_ratio = 0
+                base_accuracy = 0.9 # 기본 90%의 정답률 
+                adjusted_accuracy = base_accuracy - (drunk_ratio * 0.5) #취한 정도에 따라 정확도 깎음
+                is_correct = random.random() < max(0.3, adjusted_accuracy) #아무리 취해도 30% 확률로는 맞출 수 있게 함
+
+                if is_correct:
+                    answer = expected
+                else:
+                    if expected == "짝":
+                        answer = str(current_num)
+                    else:
+                        answer = "짝"
+                print(f">> {name}의 차례: {answer}")
+
+            if answer != expected:
+                mistake_count += 1
+
+                if mistake_count == 1:
+                    print(f"❌ {name} 틀렸습니다! 😅 살리고~ 살리고~ 한 번은 봐줄게요!")
+                    print("")
+                else: 
+                    player['drunk'] += 1
+                    print(f"❌ {name} 땡! 정답은 '{expected}'")
+                    print("""
+    ┏┯┯┯┯┯┓
+    ┃││∧∧│┃살려줘!!
+    ┃│(≧Д≦)┃
+    ┃││ф ф│┃
+    ┗┷┷┷┷┷┛
+                           """)
+                    print(f"🚨 전체 두 번째 실수 발생! 더 이상 못 살려~ 게임 종료! 🚨")
+                    break
+            else:
+                print(f"✅ {name} 정답!\n")
+
+            current_num += 1
+            turn += 1
+
 
     # 주량이 0이 될시 딕셔너리에 있는 사람들 out 그리고 게임 종료
     
@@ -366,7 +449,6 @@ class alcohol_game:
             # ########## leacy code
             
 
-    
     # 게임을 시작하는 함수
     def start(self):
         # 순서 1. 인트로 2. 시작 여부 3. 이름 받기 4. 게임 종료
@@ -381,7 +463,6 @@ class alcohol_game:
                 return
             break
 
-
         self.player_name = input("오늘 거하게 취해볼 당신의 이름은? : ").strip()
         # self.participants.append(self.player_name)
         self.select_alcohol_limit()
@@ -390,6 +471,7 @@ class alcohol_game:
         self.invite_participants()
         self.show_game_list()
         self.play()
+
 
 if __name__ == "__main__":
     try:
