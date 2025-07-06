@@ -10,7 +10,7 @@ class alcohol_game:
         self.game_list = ["딸기게임", "369게임", "끝말잇기"]
         self.player_names = []
         self.participants = []
-        self.word_list = self.extract_nouns_from_csv("kr_korean.csv")
+        self.word_list = self.extract_nouns_from_csv("/content/kr_korean.csv")
 
     def intro(self):
         intro = r"""
@@ -21,6 +21,7 @@ class alcohol_game:
 ----------------------------------------------------------------------------------------------
 누가 술을 마셔? 너가 술을 마셔~
 ----------------------------------------------------------------------------------------------
+
         """
         for line in intro.splitlines():
             print(line)
@@ -36,54 +37,8 @@ class alcohol_game:
             clean_nouns = noun_df['-가'].dropna().drop_duplicates()
             return [word for word in clean_nouns if self.is_clean_korean(word)]
         except Exception as e:
-            print(f"CSV 불러오기 실패: {e}")
+            print(f"사전 로딩 오류: {e}")
             return []
-
-    def add_participant(self, name, limit):
-        self.participants.append({'name': name, 'limit': limit, 'drunk': 0})
-        self.player_names.append(name)
-
-    def select_alcohol_limit(self):
-        select = [2, 4, 6, 8, 10]
-        alcohol_menu = (
-            "-------------🍺소주 얼만큼 드세요---\n"
-            "-------------1. 반병 (2잔)\n"
-            "-------------2. 반병~한병 (4잔)\n"
-            "-------------3. 한병~한병반 (6잔)\n"
-            "-------------4. 한병반~두병 (8잔)\n"
-            "-------------5. 두병 이상 (10잔)\n"
-        )
-        while True:
-            print(alcohol_menu)
-            choice = input("당신의 치사량을 선택하세요(1~5): ").strip()
-            if choice in ('1', '2', '3', '4', '5'):
-                self.alcohol_limit = select[int(choice) - 1]
-                print(f"> 설정된 주량: {self.alcohol_limit}잔\n")
-                break
-            else:
-                print("잘못 선택했습니다. 다시 골라주세요\n")
-
-    def invite_participants(self):
-        participants = ["은서", "하연", "연서", "예진"]
-        while True:
-            try:
-                n = int(input("초대할 사람 수(최대 3명): ").strip())
-                if 0 <= n <= 3:
-                    break
-            except ValueError:
-                pass
-            print("3명까지만 불러주세요.")
-        chosen = random.sample(participants, n)
-        for p in chosen:
-            limit = random.choice([2, 4, 6, 8, 10])
-            self.add_participant(p, limit)
-
-        print("\n현재 상태:")
-        for p in self.participants:
-            print(f" - {p['name']}: 마신 {p['drunk']}잔, 남은 {p['limit'] - p['drunk']}잔")
-
-        print("\n참가자 리스트:")
-        print(", ".join(self.player_names), "\n")
 
     def get_computer_word(self, last_char, used_words):
         for word in self.word_list:
@@ -95,25 +50,26 @@ class alcohol_game:
         used_words = []
         last_char = None
 
-        print("\n끝말잇기를 시작합니다. '끝'을 입력하면 종료됩니다.")
-        print("2글자 이상 순수 한글 단어만 사용할 수 있습니다.\n")
+        print("끝말잇기를 시작합니다. '끝'을 입력하면 종료됩니다.")
+        print("2글자 이상 순수 한글 단어만 사용할 수 있습니다.")
 
         while True:
             user_word = input("당신의 단어: ").strip()
+
             if user_word == "끝":
                 print("게임을 종료합니다.")
                 break
             if len(user_word) < 2:
-                print("2글자 이상 입력하세요.")
+                print("2글자 이상 단어만 입력 가능합니다.")
                 continue
             if user_word in used_words:
-                print("이미 사용된 단어입니다. 당신이 졌습니다.")
+                print("이미 사용한 단어입니다. 당신이 졌습니다.")
                 break
             if user_word not in self.word_list:
                 print("사전에 없는 단어입니다. 다시 입력하세요.")
                 continue
             if last_char and not user_word.startswith(last_char):
-                print(f"'{last_char}'로 시작해야 합니다.")
+                print(f"'{last_char}'(으)로 시작하는 단어를 입력해야 합니다.")
                 continue
 
             used_words.append(user_word)
@@ -125,43 +81,96 @@ class alcohol_game:
                 used_words.append(comp_word)
                 last_char = comp_word[-1]
             else:
-                print("컴퓨터가 단어를 못 찾았습니다. 당신이 이겼습니다!")
+                print("컴퓨터가 단어를 찾지 못했습니다. 당신이 이겼습니다.")
                 break
 
-    def play(self):
-        print(f"{self.player_name}님의 주량은 {self.alcohol_limit}잔입니다.\n")
+    def add_participant(self, name, limit):
+        self.participants.append({'name':name, 'limit':limit, 'drunk':0})
+        self.player_names.append(name)
+
+    def select_alcohol_limit(self):
+        select = [2, 4, 6, 8, 10]
+        alcohol_menu = (
+            "-------------🍺소주 얼만큼 드세요(수줍)---{\\__/}------\n"
+            "-------------1. 반병 (2잔)---------------(̷ ̷´̷ ̷^̷ ̷`̷)̷◞♡---\n"
+            "-------------2. 반병에서 한병 (4잔)------|  ⫘ |------\n"
+            "-------------3. 한병에서 한병반 (6잔)------------------\n"
+            "-------------4. 한병반에서 두병 (8잔)------------------\n"
+            "-------------5. 두병 이상 (10잔)----------------------\n"
+        )
         while True:
-            self.show_game_list()
-            choice = input("플레이할 게임 번호를 선택하세요 (종료: q): ").strip()
-            if choice == 'q':
-                print("게임 종료!")
+            print(alcohol_menu)
+            choice = input("당신의 치사량을 선택하세요(1~5): ").strip()
+            if choice in ('1','2','3','4','5'):
+                self.alcohol_limit = select[int(choice)-1]
+                print(f"> 설정된 주량: {self.alcohol_limit}잔\n")
                 break
-            elif choice == '3':
-                self.play_end_word_game()
             else:
-                print("아직 구현되지 않은 게임입니다. 다른 게임을 선택하세요.\n")
+                print("잘못 선택했습니다. 다시 골라주세요\n")
+
+    def invite_participants(self):
+        participants = ["은서","하연","연서","예진"]
+        while True:
+            try:
+                n = int(input("초대할 사람 수(최대 3명)").strip())
+                if 0 <= n <= 3:
+                    break
+            except ValueError:
+                pass
+            print("3명까지만 불러주세요 친구들이 3명만 온데요")
+        chosen_participants = random.sample(participants, n)
+        for part in chosen_participants:
+            limit_drink = random.choice([2, 4, 6, 8, 10])
+            self.add_participant(part, limit_drink)
+
+        print("\n 현재 상태: ")
+        for p in self.participants:
+            remain_limit = p['limit'] - p['drunk']
+            print(f" - {p['name']}: 마신 {p['drunk']}잔, 남은 {remain_limit}잔")
+
+        print("\n참가자 리스트:")
+        print(", ".join(self.player_names), "\n")
 
     def show_game_list(self):
-        print("\n게임 리스트:")
-        for i, game in enumerate(self.game_list, start=1):
-            print(f"{i}. {game}")
+        print("\n 게임 리스트")
+        if not self.game_list:
+            print("게임이 없는뎁쇼?!?!?")
+        else:
+            for i, game in enumerate(self.game_list, start=1):
+                print(f"{i}. {game}\n")
+
+    def play(self):
+        print(f"{self.player_name}님의 주량은 ({self.alcohol_limit}잔) 입니다.")
+
+        while True:
+            self.show_game_list()
+            choice = input("플레이할 게임 번호를 입력하세요 (또는 '끝' 입력 시 종료): ").strip()
+
+            if choice == "끝":
+                print("게임을 종료합니다.")
+                break
+            elif choice == "3":
+                self.play_end_word_game()
+            else:
+                print("아직 구현되지 않은 게임입니다.\n")
 
     def start(self):
         self.intro()
         while True:
-            yn = input("게임을 시작할까요? (y/n): ").strip().lower()
-            if yn == 'y':
-                break
-            elif yn == 'n':
-                print("게임을 시작하지 않았습니다.")
+            yes_or_no = input("게임을 시작할까요?(y/n): ").strip().lower()
+            if yes_or_no not in ('y', 'n'):
+                print("y/n 중 골라주세요 ㅡㅡ : ")
+                continue
+            if yes_or_no == 'n':
+                print("게임이 시작되지 못했습니다 ㅠ")
                 return
-            else:
-                print("y 또는 n만 입력해주세요.")
+            break
 
-        self.player_name = input("당신의 이름은? : ").strip()
+        self.player_name = input("오늘 거하게 취해볼 당신의 이름은? : ").strip()
         self.select_alcohol_limit()
         self.add_participant(self.player_name, self.alcohol_limit)
         self.invite_participants()
+        self.show_game_list()
         self.play()
 
 
