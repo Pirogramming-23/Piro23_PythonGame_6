@@ -1,5 +1,3 @@
-
-
 def subway_game(self):
         Subway_Data = {
             "1호선": ["소요산", "동두천", "의정부", "회기", "청량리", "시청", "서울역", "용산", "구로", "인천", "신창", "광명", "서동탄"],
@@ -15,24 +13,21 @@ def subway_game(self):
             "신분당선": ["신사", "논현", "신논현", "강남", "양재", "판교", "정자", "광교중앙", "광교", "동천", "수지구청"]
         }
         valid_lines = list(Subway_Data.keys())
+        print("🚇 지하철~ 지하철~ 몇호선?! 몇호선?! 🚇")
 
-        print("\n🚇 지하철~ 지하철~ 지하철 지하철 🚉 몇호선!? 몇호선!? 몇호선?! 몇호선?!")
-
-        # 시작 플레이어를 랜덤으로 선택
+        # 시작 플레이어 랜덤 선택
         starting_player = random.choice(self.participants)
         starting_player_name = starting_player['name']
-        start_index = -1
-        for i, p in enumerate(self.participants):
-            if p['name'] == starting_player_name:
-                start_index = i
-                break
+        start_index = self.participants.index(starting_player)
         
-        print(f"시작 플레이어는 {starting_player_name}님 입니다!")
+        print(f"시작은 {starting_player_name}님부터!")
 
-        if starting_player['name'] == self.player_name: # 사용자가 시작
-            onemorechance = False
+        # 호선 선택
+        chosen_line = ""
+        if starting_player_name == self.player_name:
+            onemorechance =False
             while True:
-                line_in = input(f"[{starting_player_name}님] 어떤 호선을 선택하시겠어요?(ex: 1호선) : ").strip()
+                line_in = input(f"[{self.player_name}님] 호선을 선택하세요 (ex: 1호선): ").strip()
                 if line_in in valid_lines:
                     chosen_line = line_in
                     break
@@ -43,20 +38,24 @@ def subway_game(self):
                     else:
                         print("살리고 살리고~! 유효한 노선을 선택해주세요(1호선-9호선, 신분당선, 수인분당선)")
                         onemorechance = True
-        else: # 컴퓨터가 시작
+        else:
+            print(f"[{starting_player_name}님]이(가) 노선을 선택합니다...")
+            time.sleep(1)
             chosen_line = random.choice(valid_lines)
             print(f"{starting_player_name}: {chosen_line}!")
 
-        print(f"\n선택된 노선: {chosen_line}의 역 이름을 순서대로 말해주세요!")
+        # 역 이름 말하기
+        print(f"\n<{chosen_line}>의 역 이름을 순서대로 말해주세요!")
         used_stations = []
         current_turn_index = start_index
+        loser_name = ""
 
         while True:
             current_player = self.participants[current_turn_index]
             is_correct = False
 
-            if current_player['name'] == self.player_name: # 사용자 턴 - 지하철 나열
-                answer = input(f"\n[{current_player['name']}님 턴] {current_player['name']}: ").strip()
+            if current_player['name'] == self.player_name:
+                answer = input(f"\n[{self.player_name}님 턴]: ").strip()
                 if answer in used_stations:
                     print(f"❌ '{answer}'은/는 이미 나온 역입니다!")
                 elif answer in Subway_Data[chosen_line]:
@@ -64,22 +63,32 @@ def subway_game(self):
                     is_correct = True
                 else:
                     print(f"❌ '{answer}'은/는 {chosen_line}에 없는 역입니다!")
-            else: # 컴퓨터 턴 - 지하철 나열
+            else: # 컴퓨터 턴
                 print(f"\n[{current_player['name']}님 턴...]")
-                time.sleep(1)
-                if random.random() < 0.85: # 85% 확률로 정답 맞추기
-                    available_stations = [s for s in Subway_Data[chosen_line] if s not in used_stations]
-                    if available_stations:
-                        com_ans = random.choice(available_stations)
-                        print(f"{current_player['name']}: {com_ans}")
-                        used_stations.append(com_ans)
-                        is_correct = True
-                    else:
-                        print(f"{current_player['name']}: ...더 이상 역이 생각이 안 나..!")
+                time.sleep(1.5)
+                available = [s for s in Subway_Data[chosen_line] if s not in used_stations]
+                if available and random.random() < 0.8: # 80% 확률로 정답
+                    com_ans = random.choice(available)
+                    print(f"{current_player['name']}: {com_ans}")
+                    used_stations.append(com_ans)
+                    is_correct = True
                 else:
-                    print(f"{current_player['name']}: 으음...모르겠어..!")
-            
+                    print(f"{current_player['name']}: ...모르겠다!")
+
             if not is_correct:
-                return current_player['name'] 
+                loser_name = current_player['name']
+                print(f"\n💥 {loser_name}님 당첨! 💥")
+                # 패배자 처리
+                for p in self.participants:
+                    if p['name'] == loser_name:
+                        p['drunk'] += 1
+                        break
+                
+                print("\n--- 현재 상태 ---")
+                for p in self.participants:
+                    remain_limit = p['limit'] - p['drunk']
+                    print(f" - {p['name']}: 마신 {p['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                
+                return loser_name
 
             current_turn_index = (current_turn_index + 1) % len(self.participants)
