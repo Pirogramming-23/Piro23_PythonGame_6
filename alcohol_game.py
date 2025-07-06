@@ -28,63 +28,7 @@ class alcohol_game:
             print(line)
             time.sleep(0.3)
 
-    def is_clean_korean(self, word):
-        return bool(re.fullmatch(r'[가-힣]{2,}', str(word)))
-
-    def extract_nouns_from_csv(self, path):
-        try:
-            df = pd.read_csv(path, encoding='utf-8')
-            noun_df = df[df['어미'].str.contains('명사', na=False)]
-            clean_nouns = noun_df['-가'].dropna().drop_duplicates()
-            return [word for word in clean_nouns if self.is_clean_korean(word)]
-        except Exception as e:
-            print(f"사전 로딩 오류: {e}")
-            return []
-
-    def get_computer_word(self, last_char, used_words):
-        candidates = [word for word in self.word_list if word.startswith(last_char) and word not in used_words]
-        if candidates:
-            return random.choice(candidates)  # 랜덤하게 선택
-        return None
-
-    def play_end_word_game(self):
-        used_words = []
-        last_char = None
-
-        print("끝말잇기를 시작합니다. '끝'을 입력하면 종료됩니다.")
-        print("2글자 이상 순수 한글 단어만 사용할 수 있습니다.")
-
-        while True:
-            user_word = input("당신의 단어: ").strip()
-
-            if user_word == "끝":
-                print("게임을 종료합니다.")
-                break
-            if len(user_word) < 2:
-                print("2글자 이상 단어만 입력 가능합니다.")
-                continue
-            if user_word in used_words:
-                print("이미 사용한 단어입니다. 당신이 졌습니다.")
-                break
-            if user_word not in self.word_list:
-                print("사전에 없는 단어입니다. 다시 입력하세요.")
-                continue
-            if last_char and not user_word.startswith(last_char):
-                print(f"'{last_char}'(으)로 시작하는 단어를 입력해야 합니다.")
-                continue
-
-            used_words.append(user_word)
-            last_char = user_word[-1]
-
-            comp_word = self.get_computer_word(last_char, used_words)
-            if comp_word:
-                print(f"컴퓨터: {comp_word}")
-                used_words.append(comp_word)
-                last_char = comp_word[-1]
-            else:
-                print("컴퓨터가 단어를 찾지 못했습니다. 당신이 이겼습니다.")
-                break
-
+    
             
     # 참여자 추가
     def add_participant(self, name, limit):
@@ -162,7 +106,6 @@ class alcohol_game:
 
             print(f"\n[{selected_game}] 게임을 시작!\n")
             loser = self.game_list[selected_game]()
-
             # 예외처리: 아무도 안지면 다시
             if not loser:
                 continue
@@ -196,6 +139,7 @@ class alcohol_game:
                     /    |  |::::|＼､_________／ /:::/〃    |
                 """)
                 return 
+            
             # 컴퓨터가 질 시에 램덤으로 게임 고름
             if loser != self.player_name:
                 print(f"\n{loser}이(가) 좋아하는 랜덤 게임!\n")
@@ -203,8 +147,32 @@ class alcohol_game:
                 next_game = random.choice(list(self.game_list.keys()))
                 print(f"{loser}: [{next_game}] 게임!\n")
                 time.sleep(1)
-                self.game_list[next_game]()
+                
+                nested_loser = self.game_list[next_game]()
+                if nested_loser:
+                    p2 = next((p for p in self.participants if p['name'] == nested_loser), None)
+                    if p2 and p2['drunk'] >= p2['limit']:
+                        print(f"\n{nested_loser}님이 치사량을 넘겼습니다")
+                        print(fr"""
+                                {loser}님 술찌시네요~~ 후후
+                                ￣￣￣￣￣ヽ___ノ￣￣￣￣￣￣￣￣￣
+                                        Ｏ
+                                         o
+                                        ,. ─冖'⌒'─､⌒ ⌒ 〉
+                                       ノ       ＼  ⌒ ─､─､〉〉
+                                       / ,r‐へへく⌒'￢､  ヽ〉
+                                      {{ノ へ._、 ,,／~`  〉 ｝
+                                     ／プ￣￣`y'¨Y´￣￣ヽ─}}j=く
+                                    ノ /レ'>ー{{___ｭ`ーー'  ﾘ,ｲ}}
+                                   / _勺 ｲ;；∵r===､､∴'∵;  シ 
+                                  ,/ └'ノ ＼  ご`    ノ{{ー—､__
+                                  人＿_/ー┬ー个-､＿＿,,.. ‐´ 〃`ァーｧー＼
+                                . /  |／ |::::|､      〃 /:::/   ヽ
+                                /    |  |::::|＼､_________／ /:::/〃    |
+                        """)
+                        return
                 continue
+            
             # 내가 질 시에 게임 고름
             while True:
                 yn = input("다음 게임 계속 하실까요?(y/n): ").strip().lower()
@@ -230,7 +198,7 @@ class alcohol_game:
     
     
     # 여기서부터 게임 파트###############################
-
+    # ################# 아파트 게임
     def apartment_game(self):
         print("\n 아파트~~!, 아파트~~!, 아파트~~!, uh, uh-huh, uh-huh [...대충 부르노 마스 보컬]")
         
@@ -271,6 +239,133 @@ class alcohol_game:
                     print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
                 return loser
 
+    # ################### 끝말잇기
+    def is_clean_korean(self, word):
+        return bool(re.fullmatch(r'[가-힣]{2,}', str(word)))
+
+    def extract_nouns_from_csv(self, path):
+        try:
+            df = pd.read_csv(path, encoding='utf-8')
+            noun_df = df[df['어미'].str.contains('명사', na=False)]
+            clean_nouns = noun_df['-가'].dropna().drop_duplicates()
+            return [word for word in clean_nouns if self.is_clean_korean(word)]
+        except Exception as e:
+            print(f"사전 로딩 오류: {e}")
+            return []
+
+    def get_computer_word(self, last_char, used_words):
+        candidates = [word for word in self.word_list if word.startswith(last_char) and word not in used_words]
+        if candidates:
+            return random.choice(candidates)  # 랜덤하게 선택
+        return None
+
+    def play_end_word_game(self):
+        used_words = []
+        last_char = None
+
+        # 컴퓨터 대신 플레이어로 변형
+        players = [self.player_name] + [i['name'] for i in self.participants if i['name'] != self.player_name]
+        turn = 0
+        
+        print("끝말잇기를 시작합니다. '끝'을 입력하면 종료됩니다.")
+        print("2글자 이상 순수 한글 단어만 사용할 수 있습니다.")
+
+        
+        while True:
+            # leacy code
+            # user_word = input("당신의 단어: ").strip()
+            current = players[turn % len(players)]
+            
+            if current == self.player_name:
+                word = input(f"{current}의 단어: ").strip()
+                
+                if word == "끝":
+                    print("게임을 종료합니다.")
+                    for i in self.participants:
+                        if i['name'] == current:
+                            i['drunk'] += 1
+                            break
+                    print("\n 현재 상태:")
+                    for i in self.participants:
+                        remain_limit = i['limit'] - i['drunk']
+                        print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                    return current
+                
+                if len(word) < 2:
+                    print("2글자 이상 단어만 입력 가능합니다.")
+                    continue
+                
+                if word in used_words:
+                    print(f"이미 사용한 단어입니다. {current}님이 졌습니다.")
+                    for i in self.participants:
+                        if i['name'] == current:
+                            i['drunk'] += 1
+                            break
+                    print("\n 현재 상태:")
+                    for i in self.participants:
+                        remain_limit = i['limit'] - i['drunk']
+                        print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                    return current
+                
+                if word not in self.word_list:
+                    print("사전에 없는 단어입니다. 다시 입력하세요.")
+                    for i in self.participants:
+                        if i['name'] == current:
+                            i['drunk'] += 1
+                            break
+                    print("\n 현재 상태:")
+                    for i in self.participants:
+                        remain_limit = i['limit'] - i['drunk']
+                        print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                    return current
+                
+                if last_char and not word.startswith(last_char):
+                    print(f"'{last_char}'(으)로 시작하는 단어를 입력해야 합니다.")
+                    
+                    for i in self.participants:
+                        if i['name'] == current:
+                            i['drunk'] += 1
+                            break
+                    print("\n 현재 상태:")
+                    for i in self.participants:
+                        remain_limit = i['limit'] - i['drunk']
+                        print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                    return current
+                
+            else:
+                # 다른 참가자들의 차례(leacy_code 참고)
+                comp_word = self.get_computer_word(last_char, used_words)
+                if comp_word:
+                    print(f"{current}: {comp_word}")
+                    word = comp_word
+                    
+                else:
+                    print(f"{current}이(가) 단어를 찾지 못했습니다. {current}님이 졌습니다!")
+                    for i in self.participants:
+                        if i['name'] == current:
+                            i['drunk'] += 1
+                            break
+                    print("\n 현재 상태:")
+                    for i in self.participants:
+                        remain_limit = i['limit'] - i['drunk']
+                        print(f" - {i['name']}: 마신 {i['drunk']}잔🍺, 남은 {remain_limit}잔🍺")
+                    return current
+                
+            used_words.append(word)
+            last_char = word[-1]
+            turn += 1
+            # ########## leacy code
+            # comp_word = self.get_computer_word(last_char, used_words)
+            # if comp_word:
+            #     print(f"컴퓨터: {comp_word}")
+            #     used_words.append(comp_word)
+            #     last_char = comp_word[-1]
+            # else:
+            #     print("컴퓨터가 단어를 찾지 못했습니다. 당신이 이겼습니다.")
+            #     break
+            # ########## leacy code
+            
+
     
     # 게임을 시작하는 함수
     def start(self):
@@ -295,7 +390,7 @@ class alcohol_game:
         self.invite_participants()
         self.show_game_list()
         self.play()
-         
+
 if __name__ == "__main__":
     try:
         game = alcohol_game()
