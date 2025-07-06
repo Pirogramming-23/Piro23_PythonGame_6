@@ -86,7 +86,24 @@ class alcohol_game:
     # 게임이 돌아가는 로직 구현
     def play(self):
         print(f"{self.player_name}님의 주량은 ({self.alcohol_limit}잔) 입니다.")
+    
+        while True:
+            self.show_game_list()
+            choice = input("어떤 게임을 플레이할까요? 번호를 입력해주세요 (종료하려면 q): ").strip()
+
+            if choice == 'q':
+                print("게임을 종료합니다. 안녕히 가세요~ 🍻")
+                break
+
+            if choice == '1':
+                print("딸기게임은 아직 준비 중이에요. 다음에 만나요!\n")
+            elif choice == '2':
+                self.game_369()
+            else:
+                print("잘못된 선택입니다. 다시 입력해주세요.\n")
+
         
+
     # 게임 리스트 함수
     def show_game_list(self):
         print("\n 게임 리스트")
@@ -95,9 +112,51 @@ class alcohol_game:
         else:
             for i, game in enumerate(self.game_list, start=1):
                 print(f"{i}. {game}\n")
-                
-    
-    
+
+
+    # 369 게임 함수
+    def game_369(self):
+        print("369 게임을 시작합니다! 3, 6, 9가 들어간 숫자는 '짝'을 외쳐주세요!")
+        print("---369! 369! 369! 369!---")
+
+        current_num = 1
+        turn = 0
+
+        while True:
+            player = self.participants[turn % len(self.participants)]
+            name = player['name']
+
+            count_369 = sum(1 for d in str(current_num) if d in "369")
+            if count_369 == 0:
+                expected = str(current_num)
+            else:
+                expected = "짝" * count_369
+            
+            #self.player_name일 때는 직접 정답 입력하고 그 외에는 랜덤으로 생성
+            if name == self.player_name:
+                answer = input(f"{name}의 차례: ").strip()
+            else:
+                is_correct = random.random() < 0.8
+                if is_correct:
+                    answer = expected
+                else:
+                    if expected == "짝":
+                        answer = str(current_num)
+                    else:
+                        answer = "짝"
+                print(f"{name}의 차례: {answer}")
+
+            if answer != expected:
+                player['drunk'] += 1
+                remain = player['limit'] - player['drunk']
+
+                print(f"{name} 틀렸습니다! ➤ 한 잔 마십니다!\n")
+                break
+            
+            current_num += 1
+            turn += 1
+
+
     # 게임을 시작하는 함수
     def start(self):
         # 순서 1. 인트로 2. 시작 여부 3. 이름 받기 4. 게임 종료
